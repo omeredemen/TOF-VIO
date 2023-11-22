@@ -12,9 +12,12 @@
 
 #include <opencv2/opencv.hpp>
 #include <cv_bridge/cv_bridge.h>
-#include <sensor_msgs/PointCloud2.h>
+#include "sensor_msgs/msg/point_cloud2.hpp"
+#include "sensor_msgs/msg/image.hpp"
 
 using namespace cv;
+using point_cloud2 = sensor_msgs::msg::PointCloud2;
+using image_msg = sensor_msgs::msg::Image;
 
 class TOF_Frame
 {
@@ -30,8 +33,8 @@ public:
   TOF_Frame();
 
   void clear();
-  void read_PC_Iimg_FromROSMsg(const sensor_msgs::PointCloud2ConstPtr & pcPtr,
-                               const sensor_msgs::ImageConstPtr & mono8Ptr);
+  void read_PC_Iimg_FromROSMsg(const point_cloud2::SharedPtr &pcPtr,
+                               const image_msg::SharedPtr &mono8Ptr);
   static void copy(TOF_Frame &frome, TOF_Frame &to);
 
 };
