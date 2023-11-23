@@ -60,7 +60,7 @@ bool ICP_ALIGNMENT::icp_loops(int             times,
         sort(pairs.begin(), pairs.end(), sortbythird);
         if(output_info)
         {
-            double sum=0;
+            // double sum=0;
             if(pairs.size()>400)
             {
 //                for(int j=0; j<100; j++)
@@ -153,8 +153,8 @@ void ICP_ALIGNMENT::icp_make_pairs(int nns_radius)
     umin=vmin=0;
     //  cout << "src cloud size " << src.size() << endl;
     //  cout << "tgt cloud size " << tgt.size() << endl;
-    for(int i=0; i<src.size(); i++){
-        PointT pt_in_src=src.at(i);
+    for(size_t i = 0; i < src.size(); i++){
+        // PointT pt_in_src=src.at(i);
         PointT pt = transformPoint(src.at(i),T_ts_est);
 
         int    u,v;
@@ -247,7 +247,7 @@ void ICP_ALIGNMENT::icp_single_loop(bool   use_robust_kernel,
         int cut_off=pairs.size()-1;
         if(get<2>(pairs[cut_off]) > 0.02)
         {
-            int cut_off = floor(pairs.size()*0.8);
+            // int cut_off = floor(pairs.size()*0.8);
             //pairs.erase(pairs.begin() + cut_off, pairs.end());
         }
     }
@@ -256,7 +256,7 @@ void ICP_ALIGNMENT::icp_single_loop(bool   use_robust_kernel,
 
     this->src.clear();
     Eigen::Affine3f T_ts_est_inv = T_ts_est.inverse();
-    for(int i=0; i<pairs.size(); i++)
+    for(size_t i=0; i<pairs.size(); i++)
     {
         this->src.push_back(transformPoint(get<0>(pairs[i]),T_ts_est_inv));
     }

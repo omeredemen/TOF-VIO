@@ -31,8 +31,8 @@ include_directories(SYSTEM
 ##################################################################################
 add_library(nodelet_icp
     # src/vo/node_vo.cpp
-    # src/vo/salientpts.cpp
-    # src/vo/icp.cpp
+    src/vo/salientpts.cpp
+    src/vo/icp.cpp
     src/vo/tof_frame.cpp
     )
 target_link_libraries(nodelet_icp

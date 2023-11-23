@@ -14,24 +14,25 @@ class tic_toc_ros
 {
 public:
     tic_toc_ros(void) {
-        rclcpp::Time now = this->get_clock()->now();
+        time = tic.seconds();
     }
     double dT_s(void){
-        return (this->get_clock()->now()-tic).second();
+        return (tic.seconds() - time);
     }
     double dT_ms(void){
-        return (this->get_clock()->now()-tic).second()*1000;
+        return (tic.seconds() - time) * 1000;
     }
     void toc(void)
     {
-        std::cout << (this->get_clock()->now()-tic).second()*1000 <<"ms" << std::endl;
+        std::cout << (tic.seconds() - time) * 1000 << "ms" << std::endl;
     }
     void toc(std::string str)
     {
-        std::cout << str << " time:" <<(this->get_clock()->now()-tic).second()*1000 <<"ms" << std::endl;
+        std::cout << str << " time:" << (tic.seconds() - time) * 1000 << "ms" << std::endl;
     }
 private:
     rclcpp::Time tic;
+    double time;
 };
 
 
