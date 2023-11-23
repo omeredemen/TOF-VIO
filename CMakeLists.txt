@@ -10,7 +10,9 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
 find_package(tf2 REQUIRED)
+find_package(image_transport REQUIRED)
 
 find_package(pcl_ros REQUIRED)
 find_package(pcl_conversions REQUIRED)
@@ -20,6 +22,7 @@ find_package(PCL 1.3 REQUIRED)
 find_package (OpenCV 4 REQUIRED)
 find_package (Eigen3 REQUIRED)
 find_package (cv_bridge REQUIRED)
+find_package (pluginlib REQUIRED)
 
 include_directories(SYSTEM
     ${PCL_INCLUDE_DIRS}
@@ -30,7 +33,7 @@ include_directories(SYSTEM
 
 ##################################################################################
 add_library(nodelet_icp
-    # src/vo/node_vo.cpp
+    src/vo/node_vo.cpp
     src/vo/salientpts.cpp
     src/vo/icp.cpp
     src/vo/tof_frame.cpp
@@ -41,10 +44,13 @@ ament_target_dependencies(nodelet_icp
   rclcpp
   sensor_msgs                  
   geometry_msgs
+  nav_msgs
   tf2_ros
   pcl_ros
   pcl_conversions
   cv_bridge
+  pluginlib
+  image_transport
   )
 
 install(TARGETS nodelet_icp
