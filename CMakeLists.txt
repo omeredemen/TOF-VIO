@@ -85,10 +85,18 @@ ament_target_dependencies(topic2file
   nav_msgs
 )
 
+add_executable(odom2posestamp src/tools/node_odom2posestamp.cpp)
+ament_target_dependencies(odom2posestamp
+  rclcpp
+  nav_msgs
+  geometry_msgs
+)
+
 install(TARGETS eskf
   nodelet_icp
   gt_publisher
   topic2file
+  odom2posestamp
   DESTINATION lib/${PROJECT_NAME}
 )
 
