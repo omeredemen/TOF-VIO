@@ -72,7 +72,23 @@ ament_target_dependencies(eskf
   image_transport
 )
 
-install(TARGETS  eskf nodelet_icp
+add_executable(gt_publisher src/tools/node_gt_publisher.cpp)
+ament_target_dependencies(gt_publisher
+  rclcpp
+  nav_msgs
+  geometry_msgs
+)
+
+add_executable(topic2file src/tools/node_odomtopic2file.cpp)
+ament_target_dependencies(topic2file
+  rclcpp
+  nav_msgs
+)
+
+install(TARGETS eskf
+  nodelet_icp
+  gt_publisher
+  topic2file
   DESTINATION lib/${PROJECT_NAME}
 )
 

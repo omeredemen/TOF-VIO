@@ -1,7 +1,5 @@
-#include "ros/ros.h"
-#include "std_msgs/String.h"
-#include "geometry_msgs/TransformStamped.h"
-#include "nav_msgs/Odometry.h"
+#include "rclcpp/rclcpp.hpp"
+#include "nav_msgs/msg/odometry.hpp"
 #include <fstream>
 
 using namespace  std;
@@ -9,10 +7,10 @@ using namespace  std;
 std::ofstream fd;
 
 //Call Back Function of motion captrure system
-void callback(const nav_msgs::OdometryConstPtr& msg)
+void callback(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
     fd << setprecision(6)
-         << msg->header.stamp << " "
+         << msg->header.stamp.nanosec << " "
          << setprecision(9)
          << msg->pose.pose.position.x << " "
          << msg->pose.pose.position.y << " "
@@ -25,15 +23,17 @@ void callback(const nav_msgs::OdometryConstPtr& msg)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "topic2file");
-    ros::NodeHandle n("~");
-    std::string filepath;
+    rclcpp::init(argc, argv);
+    auto node= std::make_shared<rclcpp::Node>("topic2file");
 
-    n.getParam("filepath", filepath);
+    std::string filepath;
+    node->declare_parameter<std::string>("filepath", "home/omer/Log");
+    filepath = node->get_parameter("filepath").as_string();
     fd.open(filepath.c_str());
 
-    ros::Subscriber sub = n.subscribe("odom", 10, callback);
-    ros::spin();
+    auto sub = node->create_subscription<nav_msgs::msg::Odometry>("odom", 10, callback);
+    rclcpp::spin(node);
+    rclcpp::shutdown();
 
     return 0;
 }
