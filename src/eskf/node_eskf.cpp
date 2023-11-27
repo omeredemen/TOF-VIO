@@ -20,9 +20,9 @@ ESKF::ESKF() : Node("eskf")
     na = this->get_parameter("eskf/na").as_double();
     nbg = this->get_parameter("eskf/nbg").as_double();
     nba = this->get_parameter("eskf/nba").as_double();
-    n_vo_p = this->get_parameter("eskf/n_vo_p").as_double();
-    n_vo_q = this->get_parameter("eskf/n_vo_q").as_double();
-    vo_delay = this->get_parameter("eskf/vo_delay").as_double();
+    n_vo_p = this->get_parameter("eskf/vo_p").as_double();
+    n_vo_q = this->get_parameter("eskf/vo_q").as_double();
+    vo_delay = this->get_parameter("eskf/vo_delay_ms").as_double();
 
     cout << "ng     :" << ng << endl;
     cout << "na     :" << na << endl;
@@ -45,6 +45,7 @@ ESKF::ESKF() : Node("eskf")
         "vo", 10, std::bind(&ESKF::odom_callback_vo, this, std::placeholders::_1));
     imu_sub = this->create_subscription<imu_msg>(
         "imu", 10, std::bind(&ESKF::imu_callback, this, std::placeholders::_1));
+    cout << "eskf node" << endl;
 }
 
 

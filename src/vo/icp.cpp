@@ -30,7 +30,7 @@ ICP_ALIGNMENT::ICP_ALIGNMENT(int pc_width_in,
     this->pc_height = pc_height_in;
     this->pc_width  = pc_width_in;
     this->max_loop = max_loop_in;
-    cout << "width" << pc_width << "height" << pc_height << endl;
+    cout << "width: " << pc_width << " height: " << pc_height << endl;
 
     src = CloudT();
     tgt = CloudT();

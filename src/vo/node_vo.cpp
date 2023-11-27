@@ -2,6 +2,7 @@
 #include "node_vo.hpp"
 
 NICP::NICP(): Node("vo_node")  {
+    cout << "vo_node" << endl;
     declareParameters();
     string  cam_cal_file_path;
     cv::Mat cameraMatrix, distCoeffs;
@@ -39,7 +40,7 @@ NICP::NICP(): Node("vo_node")  {
         if(use_ransomdownsample_pts) method++;
         if(method!=1)
         {
-            cout << "error: please check the launch file" << endl;
+            cout << "error: please check the launch file: " << method << endl;
             while(1);
         }
     }
