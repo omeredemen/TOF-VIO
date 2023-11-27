@@ -2,9 +2,7 @@
 #define ESKF_IMU_H
 
 #include <include/common.h>
-#include <sensor_msgs/Imu.h>
 #include <deque>
-
 
 using namespace std;
 using namespace Eigen;
@@ -50,7 +48,6 @@ public:
 
   double imu_start_time;
 
-
   Mat15x15 Q_imu;
   Mat15x15 Q_icp;
 
@@ -75,14 +72,11 @@ public:
   void update_Error_State_COV(const SYS_STATE& prev, SYS_STATE& curr);
   void update_Nominal_State(const SYS_STATE& prev, SYS_STATE& curr);
 
-
   //innovation
   void read_vo_msg(double secs, double qw, double qx, double qy, double qz, double px, double py, double pz);
   void innovate_ErrorState();
   void innovate_Inject_Reset();
   void innovate_reintegrate();
-
-
 };
 
 #endif // ESKF_IMU_H

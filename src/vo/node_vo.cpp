@@ -1,8 +1,8 @@
+#include <memory>
 #include "node_vo.hpp"
 
-namespace nodelet_ns
-{
 NICP::NICP(): Node("vo_node")  {
+    declareParameters();
     string  cam_cal_file_path;
     cv::Mat cameraMatrix, distCoeffs;
     double  fx,fy,cx,cy;
@@ -554,6 +554,10 @@ void NICP::declareParameters(){
     this->declare_parameter<std::string>("icp/cam_cal_file", "/home/omer/Log/");
 }
 
-}//namespace nodelet_ns
-
-// PLUGINLIB_EXPORT_CLASS(nodelet_ns::NICP, nodelet::Nodelet)
+int main(int argc, char * argv[])
+{
+    rclcpp::init(argc, argv);
+    rclcpp::spin(std::make_shared<NICP>());
+    rclcpp::shutdown();
+    return 0;
+}

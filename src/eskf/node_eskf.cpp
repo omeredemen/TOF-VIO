@@ -1,44 +1,56 @@
-#include <iostream>
-#include <ros/ros.h>
-#include <ros/console.h>
-#include <message_filters/subscriber.h>
-#include <message_filters/time_synchronizer.h>
-#include <message_filters/synchronizer.h>
-#include <message_filters/sync_policies/approximate_time.h>
-#include <sensor_msgs/Imu.h>
-#include <sensor_msgs/Range.h>
-#include <nav_msgs/Odometry.h>
-#include <Eigen/Eigen>
 #include <stdio.h>
 #include <math.h>
+#include <iostream>
 #include <deque>
-#include "visualization_msgs/Marker.h"
-#include <std_msgs/Float64MultiArray.h>
 
-#include <include/euler_q_rmatrix.h>
-#include <eskf/eskf_imu.h>
+#include <Eigen/Eigen>
 
+#include "include/euler_q_rmatrix.h"
+#include "eskf/eskf_imu.h"
 
-using namespace std;
-using namespace Eigen;
+#include "node_eskf.hpp"
 
-#define PI (3.14159265358)
-
-
-extern ESKF_IMU *eskf_imu;
-extern ros::Publisher odom_pub;
-extern bool initialized;
-
-ESKF_IMU *eskf_imu;
-ros::Publisher odom_pub;
-bool initialized=false;
-
-
-
-
-void imu_callback(const sensor_msgs::Imu::ConstPtr &msg)
+ESKF::ESKF() : Node("eskf")
 {
-  eskf_imu->read_imu_msg(msg->header.stamp.toSec(),
+    declareParameters();
+
+    // You should also tune these parameters
+    double ng, na, nbg, nba, n_vo_p, n_vo_q, vo_delay;
+    ng = this->get_parameter("eskf/ng").as_double();
+    na = this->get_parameter("eskf/na").as_double();
+    nbg = this->get_parameter("eskf/nbg").as_double();
+    nba = this->get_parameter("eskf/nba").as_double();
+    n_vo_p = this->get_parameter("eskf/n_vo_p").as_double();
+    n_vo_q = this->get_parameter("eskf/n_vo_q").as_double();
+    vo_delay = this->get_parameter("eskf/vo_delay").as_double();
+
+    cout << "ng     :" << ng << endl;
+    cout << "na     :" << na << endl;
+    cout << "nbg    :" << nbg << endl;
+    cout << "nba    :" << nba << endl;
+    cout << "n_vo_p :"  << n_vo_p << endl;
+    cout << "n_vo_q :"  << n_vo_q << endl;
+
+    eskf_imu = new ESKF_IMU(na,
+                            ng,
+                            nba,
+                            nbg,
+                            n_vo_q,
+                            n_vo_q,
+                            vo_delay);
+
+    odom_pub = this->create_publisher<odom_msg>("eskf_odom", 10);
+
+    odom_sub = this->create_subscription<odom_msg>(
+        "vo", 10, std::bind(&ESKF::odom_callback_vo, this, std::placeholders::_1));
+    imu_sub = this->create_subscription<imu_msg>(
+        "imu", 10, std::bind(&ESKF::imu_callback, this, std::placeholders::_1));
+}
+
+
+void ESKF::imu_callback(const sensor_msgs::msg::Imu::SharedPtr msg)
+{
+  eskf_imu->read_imu_msg(msg->header.stamp.sec,
                          msg->linear_acceleration.x,
                          msg->linear_acceleration.y,
                          msg->linear_acceleration.z,
@@ -56,7 +68,7 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &msg)
   }
   else {//initialzed
     eskf_imu->update_Nominal_Error_Cov();
-    nav_msgs::Odometry eskf_odom;
+    nav_msgs::msg::Odometry eskf_odom;
     eskf_odom.header.stamp = msg->header.stamp;
     eskf_odom.header.frame_id = "world";
     SYS_STATE xt=eskf_imu->states.back();
@@ -71,13 +83,13 @@ void imu_callback(const sensor_msgs::Imu::ConstPtr &msg)
     eskf_odom.pose.pose.orientation.x = xt.n_state[1];
     eskf_odom.pose.pose.orientation.y = xt.n_state[2];
     eskf_odom.pose.pose.orientation.z = xt.n_state[3];
-    odom_pub.publish(eskf_odom);
+    odom_pub->publish(eskf_odom);
     //cout << "imu update process" << endl;
   }
 }
 
 
-void odom_callback_vo(const nav_msgs::Odometry::ConstPtr &msg)
+void ESKF::odom_callback_vo(const nav_msgs::msg::Odometry::SharedPtr msg)
 {
   //cout << endl << "in vo callback:" << endl;
   if (msg->pose.pose.position.x == 0.012345)
@@ -89,7 +101,7 @@ void odom_callback_vo(const nav_msgs::Odometry::ConstPtr &msg)
     if(!initialized)
     {
       //use the first vo input at the init value
-      eskf_imu->init_from_vo(msg->header.stamp.toSec(),
+      eskf_imu->init_from_vo(msg->header.stamp.sec,
                              msg->pose.pose.orientation.w,
                              msg->pose.pose.orientation.x,
                              msg->pose.pose.orientation.y,
@@ -101,7 +113,7 @@ void odom_callback_vo(const nav_msgs::Odometry::ConstPtr &msg)
     }
     else {//initialzed
       static int count = 0;
-      eskf_imu->read_vo_msg(msg->header.stamp.toSec(),
+      eskf_imu->read_vo_msg(msg->header.stamp.sec,
                             msg->pose.pose.orientation.w,
                             msg->pose.pose.orientation.x,
                             msg->pose.pose.orientation.y,
@@ -112,7 +124,7 @@ void odom_callback_vo(const nav_msgs::Odometry::ConstPtr &msg)
       eskf_imu->innovate_ErrorState();
       eskf_imu->innovate_Inject_Reset();
       eskf_imu->innovate_reintegrate();
-      nav_msgs::Odometry eskf_odom;
+      nav_msgs::msg::Odometry eskf_odom;
       eskf_odom.header.stamp = msg->header.stamp;
       eskf_odom.header.frame_id = "world";
       SYS_STATE xt=eskf_imu->states.back();
@@ -127,54 +139,29 @@ void odom_callback_vo(const nav_msgs::Odometry::ConstPtr &msg)
       eskf_odom.pose.pose.orientation.x = xt.n_state[1];
       eskf_odom.pose.pose.orientation.y = xt.n_state[2];
       eskf_odom.pose.pose.orientation.z = xt.n_state[3];
-      odom_pub.publish(eskf_odom);
+      odom_pub->publish(eskf_odom);
       count++;
     }
   }
-
 }
 
-
-
-int main(int argc, char **argv)
+void ESKF::declareParameters()
 {
-  ros::init(argc, argv, "eskf_node");
-  ros::NodeHandle n("~");
+    // Q imu covariance matrix;
+    this->declare_parameter<double>("eskf/ng", 0);
+    this->declare_parameter<double>("eskf/na", 0);
+    this->declare_parameter<double>("eskf/nbg", 0);
+    this->declare_parameter<double>("eskf/nba", 0);
+    /* pnp position and orientation noise */
+    this->declare_parameter<double>("eskf/vo_p", 0);
+    this->declare_parameter<double>("eskf/vo_q", 0);
+    this->declare_parameter<double>("eskf/vo_delay_ms", 0);
+}
 
-
-  odom_pub = n.advertise<nav_msgs::Odometry>("eskf_odom", 10);
-
-  // You should also tune these parameters
-  double ng, na, nbg, nba, n_vo_p, n_vo_q, vo_delay;
-  // Q imu covariance matrix;
-  n.getParam("eskf/ng", ng);
-  n.getParam("eskf/na", na);
-  n.getParam("eskf/nbg", nbg);
-  n.getParam("eskf/nba", nba);
-  /* pnp position and orientation noise */
-  n.getParam("eskf/vo_p", n_vo_p);
-  n.getParam("eskf/vo_q", n_vo_q);
-  n.getParam("eskf/vo_delay_ms", vo_delay);
-  /* optical flow noise */
-
-  cout << "ng     :" << ng << endl;
-  cout << "na     :" << na << endl;
-  cout << "nbg    :" << nbg << endl;
-  cout << "nba    :" << nba << endl;
-  cout << "n_vo_p :"  << n_vo_p << endl;
-  cout << "n_vo_q :"  << n_vo_q << endl;
-
-  eskf_imu = new ESKF_IMU(na,
-                          ng,
-                          nba,
-                          nbg,
-                          n_vo_q,
-                          n_vo_q,
-                          vo_delay);
-
-  ros::Subscriber s1 = n.subscribe("imu", 30, imu_callback);
-  ros::Subscriber s2 = n.subscribe("vo", 1, odom_callback_vo);
-
-
-  ros::spin();
+int main(int argc, char *argv[])
+{
+  rclcpp::init(argc, argv);
+  rclcpp::spin(std::make_shared<ESKF>());
+  rclcpp::shutdown();
+  return 0;
 }

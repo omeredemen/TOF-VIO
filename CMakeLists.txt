@@ -25,19 +25,19 @@ find_package (cv_bridge REQUIRED)
 find_package (pluginlib REQUIRED)
 
 include_directories(SYSTEM
-    ${PCL_INCLUDE_DIRS}
-    ${OpenCV_INCLUDE_DIRS}
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/"
-    "${CMAKE_CURRENT_SOURCE_DIR}/src/include/"
-    )
+  ${PCL_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/"
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/include/"
+)
 
 ##################################################################################
-add_library(nodelet_icp
-    src/vo/node_vo.cpp
-    src/vo/salientpts.cpp
-    src/vo/icp.cpp
-    src/vo/tof_frame.cpp
-    )
+add_executable(nodelet_icp
+  src/vo/node_vo.cpp
+  src/vo/salientpts.cpp
+  src/vo/icp.cpp
+  src/vo/tof_frame.cpp
+)
 target_link_libraries(nodelet_icp
     ${OpenCV_LIBRARIES})
 ament_target_dependencies(nodelet_icp
@@ -51,9 +51,28 @@ ament_target_dependencies(nodelet_icp
   cv_bridge
   pluginlib
   image_transport
-  )
+)
 
-install(TARGETS nodelet_icp
+##################################################################################
+add_executable(eskf
+  src/eskf/node_eskf.cpp
+  src/eskf/eskf_imu.cpp
+)
+target_include_directories(eskf PRIVATE src/eskf src/include)
+ament_target_dependencies(eskf
+  rclcpp
+  sensor_msgs                  
+  geometry_msgs
+  nav_msgs
+  tf2_ros
+  pcl_ros
+  pcl_conversions
+  cv_bridge
+  pluginlib
+  image_transport
+)
+
+install(TARGETS  eskf nodelet_icp
   DESTINATION lib/${PROJECT_NAME}
 )
 

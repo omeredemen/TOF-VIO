@@ -68,8 +68,6 @@ using std::placeholders::_1;
 using std::placeholders::_2;
 using std::placeholders::_3;
 
-namespace nodelet_ns
-{
 class NICP : public rclcpp::Node
 {
 public:
@@ -139,6 +137,6 @@ private:
     message_filters::Subscriber<image_msg>    depth_sub;
     std::shared_ptr<message_filters::TimeSynchronizer<point_cloud2, image_msg, image_msg>> temp_sync;
 };
-}  // namespace /* namespace_name */
+
 #endif  // VISUALODOM_NODE_VO_HPP_
 
